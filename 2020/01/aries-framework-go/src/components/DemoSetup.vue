@@ -7,9 +7,16 @@
                 <p>{{ invitation }}</p>
             </li>
 
-            <li>Connect to the router</li>
+            <li>Connect to the router -
+            <button class="button" v-on:click="connectToRouter">Connect</button>
+                <p>{{ connectionStatus }}</p>
+            </li>
 
-            <li>Set the router</li>
+            <li>Register the router -
+            <button class="button" v-on:click="registerRouter">Register</button>
+                <p>{{ registerStatus }}</p>
+            </li>
+
         </ul>
     </Layout>
 </template>
@@ -17,11 +24,18 @@
 <script>
     import axios from 'axios';
 
+    var routerUrl = "https://didcomm.troyronda.com/router/admin"
+    var agentUrl = "http://localhost:10081"
+
+
     export default {
-        name: 'DemoSetup',
+        name: 'Connection',
         data() {
             return {
                 invitation: null,
+                connectionStatus: null,
+                connectionID: null,
+                registerStatus: null,
             };
         },
         metaInfo: {
@@ -30,11 +44,33 @@
         methods: {
             getRouterInvitation: function () {
                 axios
-                    .post('https://didcomm.troyronda.com/router/admin/connections/create-invitation', {
-                        alias: 'rolson'
+                    .post(routerUrl + '/connections/create-invitation', {})
+                    .then(res => {
+                        this.invitation = res.data.invitation;
+                    })
+            },
+            connectToRouter: async function () {
+                let res = await axios.post(agentUrl + '/connections/receive-invitation', this.invitation)
+                this.connectionID = res.data.connection_id
+
+                await new Promise(r => setTimeout(r, 1000));
+
+                res = await axios.post(agentUrl + "/connections/"+ this.connectionID + "/accept-invitation", {})
+                if (res.status == 200) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    res = await axios.get( agentUrl + "/connections/"+ this.connectionID)
+                    this.connectionStatus = res.data.result.State
+                }
+            },
+            registerRouter: function () {
+                var registerRouterUrl = agentUrl + "/route/register"
+                axios
+                    .post(registerRouterUrl, {
+                        "connectionID" : this.connectionID
                     })
                     .then(res => {
-                        this.invitation = res.data;
+                        console.log(res)
+                        this.registerStatus = "success"
                     })
             }
         }
