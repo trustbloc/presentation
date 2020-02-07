@@ -27,6 +27,19 @@ services:
       - ${DIDCOMM_ROUTER_API_PORT}:${DIDCOMM_ROUTER_API_PORT}
     command: start
 
+  user.agent.example.com:
+    image: ${ARIES_AGENT_REST_IMAGE}:${ARIES_AGENT_REST_IMAGE_TAG}
+    environment:
+      - ARIESD_API_HOST=${USER_AGENT_HOST}:${USER_AGENT_API_PORT}
+      - ARIESD_WEBHOOK_URL=http://${USER_AGENT_WEBHOOK_CONTAINER_NAME}:${USER_AGENT_WEBHOOK_PORT}
+      - ARIESD_DEFAULT_LABEL=user-agent
+      - ARIESD_DB_PATH=${USER_AGENT_DB_PATH}
+      - ARIESD_OUTBOUND_TRANSPORT=${HTTP_SCHEME},${WS_SCHEME}
+      - ARIESD_TRANSPORT_RETURN_ROUTE=${TRANSPORT_RETURN_OPTION_ALL}
+    ports:
+      - ${USER_AGENT_API_PORT}:${USER_AGENT_API_PORT}
+    command: start
+
   nginx-proxy:
     image: jwilder/nginx-proxy
     ports:
