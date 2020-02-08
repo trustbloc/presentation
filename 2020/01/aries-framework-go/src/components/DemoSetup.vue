@@ -30,8 +30,8 @@
 <script>
     import axios from 'axios';
 
-    var routerUrl = "https://didcomm.troyronda.com/router/admin"
-    var agentUrl = "http://localhost:10081"
+    var routerUrl = process.env.VUE_APP_ROUTER_AGENT_URL
+    var agentUrl = process.env.VUE_APP_HUMAN_AGENT_URL
 
     export default {
         name: 'Connection',
