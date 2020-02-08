@@ -1,40 +1,51 @@
 <template >
-    <Layout>
+    <div class="eg-transition" :enter='enter' :leave='leave'>
+    <div class="eg-slide" v-if="active">
+    <div class="eg-slide-content">
         <h2>DIDComm Mediation</h2>
-        <ul>
-            <li>Get an Invitation from the mediator -
-                <button class="button" v-on:click="getRouterInvitation">Retrieve</button>
-                <p>{{ invitation }}</p>
-            </li>
+        <div>Get an Invitation from the mediator -
+            <button class="button" v-on:click="getRouterInvitation">Retrieve</button>
+            <eg-transition enter='fadeIn' leave='bounceOutLeft' style=padding-top:10px>
+                <eg-code-block lang="json" v-if="invitation != null && step === 1" enter='flipInY'>{{ invitation }}</eg-code-block>
+            </eg-transition>
+            <p v-if="invitation != null && step > 1">Router endpoint: <b>{{ invitation.serviceEndpoint }}</b></p>
+        </div>
 
-            <li>Connect to the router -
-            <button class="button" v-on:click="connectToRouter">Connect</button>
-                <p>{{ connectionStatus }}</p>
-            </li>
+        <div v-if="step === 2">Connect to the router -
+        <button class="button" v-on:click="connectToRouter">Connect</button>
+            <eg-transition enter='fadeIn' leave='bounceOutLeft'>
+                <p v-if="connectionStatus != null && step === 2">{{ connectionStatus }}</p>
+            </eg-transition>
+        </div>
 
-            <li>Check the connection status with the router  -
-                <button class="button" v-on:click="routerConnStatus">Status</button>
-                <button class="button" v-on:click="clearRouterConnStatus">Clear</button>
-                <p>{{ routerConnnectionStatus }}</p>
-            </li>
+        <div v-if="step === 3">Check the connection status with the router  -
+            <button class="button" v-on:click="routerConnStatus">Status</button>
+            <button class="button" v-on:click="clearRouterConnStatus">Clear</button>
+            <p>{{ routerConnnectionStatus }}</p>
+        </div>
 
-            <li>Register the router -
-            <button class="button" v-on:click="registerRouter">Register</button>
-                <p>{{ registerStatus }}</p>
-            </li>
-
-        </ul>
-    </Layout>
+        <div v-if="step === 4">Register the router -
+        <button class="button" v-on:click="registerRouter">Register</button>
+            <p>{{ registerStatus }}</p>
+        </div>
+    </div>
+    </div>
+    </div>
 </template>
 
 <script>
     import axios from 'axios';
+    import { Slide } from 'eagle.js'
 
     var routerUrl = process.env.VUE_APP_ROUTER_AGENT_URL
     var agentUrl = process.env.VUE_APP_HUMAN_AGENT_URL
 
     export default {
-        name: 'Connection',
+        name: 'DemoSetup',
+        props: {
+            steps: { default: 4 },
+        },
+        mixins: [Slide],
         data() {
             return {
                 invitation: null,
@@ -73,6 +84,8 @@
                     .then(res => {
                         console.log(res)
                         this.registerStatus = "success"
+                    }).catch(error => {
+                        this.registerStatus = error
                     })
             },
             routerConnStatus: async function () {

@@ -1,11 +1,10 @@
 <template lang='pug'>
-#Slideshow
+#Slideshow.eg-theme-agrume
   .eg-slideshow
     slide
       h1 Aries Framework Go
       h4 Hello World!
-    slide
-       <DemoSetup />
+    <DemoSetup />
 </template>
 
 <script>
