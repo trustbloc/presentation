@@ -12,6 +12,12 @@
                 <p>{{ connectionStatus }}</p>
             </li>
 
+            <li>Check the connection status with the router  -
+                <button class="button" v-on:click="routerConnStatus">Status</button>
+                <button class="button" v-on:click="clearRouterConnStatus">Clear</button>
+                <p>{{ routerConnnectionStatus }}</p>
+            </li>
+
             <li>Register the router -
             <button class="button" v-on:click="registerRouter">Register</button>
                 <p>{{ registerStatus }}</p>
@@ -27,7 +33,6 @@
     var routerUrl = "https://didcomm.troyronda.com/router/admin"
     var agentUrl = "http://localhost:10081"
 
-
     export default {
         name: 'Connection',
         data() {
@@ -36,6 +41,7 @@
                 connectionStatus: null,
                 connectionID: null,
                 registerStatus: null,
+                routerConnnectionStatus: null,
             };
         },
         metaInfo: {
@@ -55,12 +61,8 @@
 
                 await new Promise(r => setTimeout(r, 1000));
 
-                res = await axios.post(agentUrl + "/connections/"+ this.connectionID + "/accept-invitation", {})
-                if (res.status == 200) {
-                    await new Promise(r => setTimeout(r, 1000));
-                    res = await axios.get( agentUrl + "/connections/"+ this.connectionID)
-                    this.connectionStatus = res.data.result.State
-                }
+                res = await axios.get( agentUrl + "/connections/"+ this.connectionID)
+                this.connectionStatus = res.data.result.State
             },
             registerRouter: function () {
                 var registerRouterUrl = agentUrl + "/route/register"
@@ -72,6 +74,13 @@
                         console.log(res)
                         this.registerStatus = "success"
                     })
+            },
+            routerConnStatus: async function () {
+                await axios.get( agentUrl + "/connections/"+ this.connectionID)
+                this.routerConnnectionStatus = "success"
+            },
+            clearRouterConnStatus : function () {
+                this.routerConnnectionStatus = ""
             }
         }
     }
