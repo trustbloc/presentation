@@ -67,30 +67,42 @@
                     })
             },
             connectToRouter: async function () {
-                let res = await axios.post(agentUrl + '/connections/receive-invitation', this.invitation)
-                this.connectionID = res.data.connection_id
+                if (this.invitation === null) {
+                    this.connectionStatus = "Retrieve the invitation before proceeding"
+                } else {
+                    let res = await axios.post(agentUrl + '/connections/receive-invitation', this.invitation)
+                    this.connectionID = res.data.connection_id
 
-                await new Promise(r => setTimeout(r, 1000));
+                    await new Promise(r => setTimeout(r, 1000));
 
-                res = await axios.get( agentUrl + "/connections/"+ this.connectionID)
-                this.connectionStatus = res.data.result.State
+                    res = await axios.get( agentUrl + "/connections/"+ this.connectionID)
+                    this.connectionStatus = res.data.result.State
+                }
             },
             registerRouter: function () {
-                var registerRouterUrl = agentUrl + "/route/register"
-                axios
-                    .post(registerRouterUrl, {
-                        "connectionID" : this.connectionID
-                    })
-                    .then(res => {
-                        console.log(res)
-                        this.registerStatus = "success"
-                    }).catch(error => {
+                if (this.routerConnnectionStatus !== "success") {
+                    this.registerStatus = "Make sure connection with router is complete."
+                } else {
+                    var registerRouterUrl = agentUrl + "/route/register"
+                    axios
+                        .post(registerRouterUrl, {
+                            "connectionID": this.connectionID
+                        })
+                        .then(res => {
+                            this.registerStatus = "success"
+                        }).catch(error => {
                         this.registerStatus = error
                     })
+                }
             },
             routerConnStatus: async function () {
-                await axios.get( agentUrl + "/connections/"+ this.connectionID)
-                this.routerConnnectionStatus = "success"
+                let res = await axios.get( agentUrl + "/connections/"+ this.connectionID)
+
+                if (res.data.result.State == 'completed') {
+                    this.routerConnnectionStatus = "success"
+                } else {
+                    this.routerConnnectionStatus = "in-progress"
+                }
             },
             clearRouterConnStatus : function () {
                 this.routerConnnectionStatus = ""
