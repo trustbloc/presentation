@@ -1,35 +1,36 @@
 <template >
     <div class="eg-transition" :enter='enter' :leave='leave'>
-    <div class="eg-slide" v-if="active">
-    <div class="eg-slide-content">
-        <h2>DIDComm Mediation</h2>
-        <div>Get an Invitation from the mediator -
-            <button class="button" v-on:click="getRouterInvitation">Retrieve</button>
-            <eg-transition enter='fadeIn' leave='bounceOutLeft' style=padding-top:10px>
-                <eg-code-block lang="json" v-if="invitation != null && step === 1" enter='flipInY'>{{ invitation }}</eg-code-block>
-            </eg-transition>
-            <p v-if="invitation != null && step > 1">Router endpoint: <b>{{ invitation.serviceEndpoint }}</b></p>
-        </div>
+        <div class="eg-slide" v-if="active">
+            <div class="eg-slide-content">
+                <h2>DIDComm Mediation</h2>
+                <div>Get an Invitation from the mediator -
+                    <button class="button" v-on:click="getRouterInvitation">Retrieve</button>
+                    <eg-transition enter='fadeIn' leave='bounceOutLeft' style=padding-top:10px>
+                        <eg-code-block lang="json" v-if="invitation != null && step === 1" enter='flipInY'>{{ invitation }}</eg-code-block>
+                    </eg-transition>
+                    <p v-if="invitation != null && step > 1">Router endpoint: <b>{{ invitation.serviceEndpoint }}</b></p>
+                </div>
 
-        <div v-if="step === 2">Connect to the router -
-        <button class="button" v-on:click="connectToRouter">Connect</button>
-            <eg-transition enter='fadeIn' leave='bounceOutLeft'>
-                <p v-if="connectionStatus != null && step === 2">{{ connectionStatus }}</p>
-            </eg-transition>
-        </div>
+                <div v-if="step === 2">Connect to the router -
+                    <button class="button" v-on:click="connectToRouter">Connect</button>
+                    <eg-transition enter='fadeIn' leave='bounceOutLeft'>
+                        <p v-if="connectionStatus != null && step === 2">{{ connectionStatus }}</p>
+                    </eg-transition>
+                </div>
 
-        <div v-if="step === 3">Check the connection status with the router  -
-            <button class="button" v-on:click="routerConnStatus">Status</button>
-            <button class="button" v-on:click="clearRouterConnStatus">Clear</button>
-            <p>{{ routerConnnectionStatus }}</p>
-        </div>
+                <div v-if="step === 3">Check the connection status with the router  -
+                    <button class="button" v-on:click="routerConnStatus">Status</button>
+                    <button class="button" v-on:click="clearRouterConnStatus">Clear</button>
+                    <p>{{ routerConnnectionStatus }}</p>
+                </div>
 
-        <div v-if="step === 4">Register the router -
-        <button class="button" v-on:click="registerRouter">Register</button>
-            <p>{{ registerStatus }}</p>
+                <div v-if="step === 4">Register the router -
+                    <button class="button" v-on:click="registerRouter">Register</button>
+                    <button class="button" v-on:click="unregisterRouter">Unregister</button>
+                    <p>{{ registerStatus }}</p>
+                </div>
+            </div>
         </div>
-    </div>
-    </div>
     </div>
 </template>
 
@@ -91,8 +92,22 @@
                         .then(res => {
                             this.registerStatus = "success"
                         }).catch(error => {
-                        this.registerStatus = error
-                    })
+                            this.registerStatus = error.response.data
+                        })
+                }
+            },
+            unregisterRouter: function () {
+                if (this.registerStatus !== "success") {
+                    this.registerStatus = "Make sure connection with router is complete."
+                } else {
+                    var unregisterRouterUrl = agentUrl + "/route/unregister"
+                    axios
+                        .delete(unregisterRouterUrl,{})
+                        .then(res => {
+                            this.registerStatus = "router unregistered"
+                        }).catch(error => {
+                            this.registerStatus = error
+                        })
                 }
             },
             routerConnStatus: async function () {
