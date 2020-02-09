@@ -5,8 +5,8 @@
       h1 Aries Framework Go
       h4 Hello World!
     <DemoSetup :routerURL=routerAgentURL :agentURL=humanAgentURL role="" />
-    <DemoSetup :routerURL=routerAgentURL :agentURL=botAgentURL role=" (bot)" v-if="this.showBotSetup != 'false'" />
-    <DemoBasicMessage :botAgentURL=botAgentURL :humanAgentURL=humanAgentURL :humanAgentWebhookURL=humanAgentWebhookURL />
+    <DemoSetup :routerURL=routerAgentURL :agentURL=botAgentURL role=" (bot)" v-if="this.showBotSetup" />
+    <DemoBasicMessage :botAgentURL=botAgentURL :humanAgentURL=humanAgentURL :humanAgentWebhookURL=humanAgentWebhookURL :autoBotMsgRegister=autoBotMsgRegister />
 </template>
 
 <script>
@@ -21,7 +21,8 @@ export default {
     humanAgentURL: { default: process.env.VUE_APP_HUMAN_AGENT_URL },
     humanAgentWebhookURL: { default: process.env.VUE_APP_HUMAN_AGENT_WEBHOOK_URL },
     botAgentURL: { default: process.env.VUE_APP_BOT_AGENT_URL },
-    showBotSetup: { default: process.env.VUE_APP_SHOW_BOT_SETUP },
+    showBotSetup: { default: process.env.VUE_APP_SHOW_BOT_SETUP != 'false' },
+    autoBotMsgRegister: { default: process.env.VUE_APP_AUTO_BOT_MSG_REGISTER != 'false' },
   },
   mixins: [ Slideshow ],
   components: {

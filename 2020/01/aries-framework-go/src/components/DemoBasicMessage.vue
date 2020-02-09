@@ -70,6 +70,7 @@
             botAgentURL: String,
             humanAgentURL: String,
             humanAgentWebhookURL: String,
+            autoBotMsgRegister: Boolean
         },
         mixins: [Slide],
         data() {
@@ -217,7 +218,9 @@
            },
         },
         mounted: function () {
-            this.botRegistration();
+            if (this.autoBotMsgRegister) {
+                this.botRegistration();
+            }
             this.refreshTopicsData();
 
             setInterval(function () {
