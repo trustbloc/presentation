@@ -2,13 +2,15 @@
     <div class="eg-transition" :enter='enter' :leave='leave'>
         <div class="eg-slide" v-if="active">
             <div class="eg-slide-content">
-                <h2>DIDComm Mediation</h2>
+                <h2>DIDComm Mediation{{ role }}</h2>
                 <div>Get an Invitation from the mediator -
                     <button class="button" v-on:click="getRouterInvitation">Retrieve</button>
                     <eg-transition enter='fadeIn' leave='bounceOutLeft' style=padding-top:10px>
                         <eg-code-block lang="json" v-if="invitation != null && step === 1" enter='flipInY'>{{ invitation }}</eg-code-block>
                     </eg-transition>
-                    <p v-if="invitation != null && step > 1">Router endpoint: <b>{{ invitation.serviceEndpoint }}</b></p>
+                    <eg-transition enter='fadeIn' leave='fadeOut'>
+                        <p v-if="invitation != null && step > 1">{{ invitation.label }} endpoint: <b>{{ invitation.serviceEndpoint }}</b></p>
+                    </eg-transition>
                 </div>
 
                 <div v-if="step === 2">Connect to the router -
@@ -21,13 +23,17 @@
                 <div v-if="step === 3">Check the connection status with the router  -
                     <button class="button" v-on:click="routerConnStatus">Status</button>
                     <button class="button" v-on:click="clearRouterConnStatus">Clear</button>
-                    <p>{{ routerConnnectionStatus }}</p>
+                    <eg-transition enter='fadeIn' leave='fadeOut'>
+                        <p>{{ routerConnnectionStatus }}</p>
+                    </eg-transition>
                 </div>
 
                 <div v-if="step === 4">Register the router -
                     <button class="button" v-on:click="registerRouter">Register</button>
                     <button class="button" v-on:click="unregisterRouter">Unregister</button>
-                    <p>{{ registerStatus }}</p>
+                    <eg-transition enter='fadeIn' leave='fadeOut'>
+                        <p>{{ registerStatus }}</p>
+                    </eg-transition>
                 </div>
             </div>
         </div>
@@ -38,13 +44,13 @@
     import axios from 'axios';
     import { Slide } from 'eagle.js'
 
-    var routerUrl = process.env.VUE_APP_ROUTER_AGENT_URL
-    var agentUrl = process.env.VUE_APP_HUMAN_AGENT_URL
-
     export default {
         name: 'DemoSetup',
         props: {
             steps: { default: 4 },
+            routerURL: String,
+            agentURL: String,
+            role: String,
         },
         mixins: [Slide],
         data() {
@@ -62,7 +68,7 @@
         methods: {
             getRouterInvitation: function () {
                 axios
-                    .post(routerUrl + '/connections/create-invitation', {})
+                    .post(this.routerURL + '/connections/create-invitation', {})
                     .then(res => {
                         this.invitation = res.data.invitation;
                     })
@@ -71,24 +77,36 @@
                 if (this.invitation === null) {
                     this.connectionStatus = "Retrieve the invitation before proceeding"
                 } else {
-                    let res = await axios.post(agentUrl + '/connections/receive-invitation', this.invitation)
+                    this.connectionStatus = "connecting"
+                    let res = await axios.post(this.agentURL + '/connections/receive-invitation', this.invitation)
                     this.connectionID = res.data.connection_id
 
-                    await new Promise(r => setTimeout(r, 1000));
+                    const attempts = 40
+                    for (let i =0; i < attempts; i++) {
+                        await new Promise(r => setTimeout(r, 250));
+                        let res = await axios.get( this.agentURL + "/connections/"+ this.connectionID)
 
-                    res = await axios.get( agentUrl + "/connections/"+ this.connectionID)
-                    this.connectionStatus = res.data.result.State
+                        if (res.data.result.State == 'completed') {
+                            this.connectionStatus = res.data.result.State
+                            break;
+                        }
+
+                        if (i == attempts - 1) {
+                            this.connectionStatus = "timed out at state: " + res.data.result.State
+                        }
+                    }
                 }
             },
             registerRouter: function () {
                 if (this.routerConnnectionStatus !== "success") {
                     this.registerStatus = "Make sure connection with router is complete."
                 } else {
-                    var registerRouterUrl = agentUrl + "/route/register"
+                    var registerRouterUrl = this.agentURL + "/route/register"
                     axios
                         .post(registerRouterUrl, {
                             "connectionID": this.connectionID
                         })
+                        // eslint-disable-next-line no-unused-vars
                         .then(res => {
                             this.registerStatus = "success"
                         }).catch(error => {
@@ -96,22 +114,18 @@
                         })
                 }
             },
-            unregisterRouter: function () {
-                if (this.registerStatus !== "success") {
-                    this.registerStatus = "Make sure connection with router is complete."
-                } else {
-                    var unregisterRouterUrl = agentUrl + "/route/unregister"
-                    axios
-                        .delete(unregisterRouterUrl,{})
-                        .then(res => {
-                            this.registerStatus = "router unregistered"
-                        }).catch(error => {
-                            this.registerStatus = error
-                        })
-                }
+            unregisterRouter: async function () {
+                const unregisterRouterUrl = this.agentURL + "/route/unregister"
+
+                try {
+                    await axios.delete(unregisterRouterUrl,{})
+                    this.registerStatus = "router unregistered"
+                } catch (err) {
+                    this.registerStatus = err
+                }  
             },
             routerConnStatus: async function () {
-                let res = await axios.get( agentUrl + "/connections/"+ this.connectionID)
+                let res = await axios.get( this.agentURL + "/connections/"+ this.connectionID)
 
                 if (res.data.result.State == 'completed') {
                     this.routerConnnectionStatus = "success"

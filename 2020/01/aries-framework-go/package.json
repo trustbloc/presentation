@@ -6,7 +6,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "fixtures": "scripts/generate_fixtures.sh && cd fixtures && docker-compose up"
+    "fixtures": "scripts/generate_fixtures.sh && make docker",
+    "up": "cd fixtures && docker-compose up --force-recreate && docker-compose down"
   },
   "dependencies": {
     "animate.css": "^3.7.2",
@@ -14,6 +15,7 @@
     "core-js": "^3.4.4",
     "eagle.js": "^0.6.1",
     "highlight.js": "^9.18.1",
+    "uuid": "^3.4.0",
     "vue": "^2.6.10"
   },
   "devDependencies": {

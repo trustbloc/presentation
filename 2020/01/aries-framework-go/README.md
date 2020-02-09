@@ -12,9 +12,14 @@ npm install
 npm run serve
 ```
 
-### Generates fixtures and locally runs containers called by the presentation
+### Generates fixtures
 ```
 npm run fixtures
+```
+
+### Locally runs containers called by the presentation (you should generate fixtures first)
+```
+npm run up
 ```
 
 ### Compiles and minifies for production
