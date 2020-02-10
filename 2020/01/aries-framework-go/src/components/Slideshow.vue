@@ -3,7 +3,7 @@
   .eg-slideshow
     slide
       h1 Aries Framework Go
-      h4 Enables trusted communication agent apps and DIDComm services.
+      h4 Enables trusted communication between agent apps and DIDComm services.
       h4 Decentralized identity standards including DIDs, DIDComm, DID resolution, and verifiable credentials.
       h4 Aries protocol and message implementations in Go.
     slide
