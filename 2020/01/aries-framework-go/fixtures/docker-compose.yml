@@ -73,7 +73,15 @@ services:
       - WEBHOOK_REPLY_MSG=${BOT_AGENT_WEBHOOK_REPLY_MSG}
     ports:
       - ${BOT_AGENT_WEBHOOK_PORT}:${BOT_AGENT_WEBHOOK_PORT}
-    
+
+  lobby.example.com:
+    container_name: ${LOBBY_SERVER_CONTAINER_NAME}
+    image: ${LOBBY_SERVER_IMAGE}:${LOBBY_SERVER_IMAGE_TAG}
+    environment:
+      - LOBBY_SERVER_PORT=${LOBBY_SERVER_PORT}
+    ports:
+      - ${LOBBY_SERVER_PORT}:${LOBBY_SERVER_PORT}
+
   nginx-proxy:
     image: jwilder/nginx-proxy
     ports:
