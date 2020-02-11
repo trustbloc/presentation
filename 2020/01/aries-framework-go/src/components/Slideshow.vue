@@ -39,9 +39,9 @@
           graph TB;
           A1(Agent One) -->|HTTP| R(Mediator);
           R -->|WS| A(Agent Two);
-    <DemoSetup :routerURL=routerAgentURL :agentURL=humanAgentURL role="" />
-    <DemoSetup :routerURL=routerAgentURL :agentURL=botAgentURL role=" (bot)" v-if="this.showBotSetup" />
-    <DemoMultiUser :botAgentURL=botAgentURL :humanAgentURL=humanAgentURL :humanAgentWebhookURL=humanAgentWebhookURL :autoBotMsgRegister=autoBotMsgRegister />
+    <DemoSetup :routerURL=routerAgentURL :agentURL=humanAgentURL role="" :lobbyURL=lobbyServerURL />
+    <DemoSetup :routerURL=routerAgentURL :agentURL=botAgentURL role=" (bot)" v-if="this.showBotSetup" :lobbyURL=lobbyServerURL />
+    <DemoMultiUser :botAgentURL=botAgentURL :humanAgentURL=humanAgentURL :humanAgentWebhookURL=humanAgentWebhookURL :autoBotMsgRegister=autoBotMsgRegister :lobbyURL=lobbyServerURL />
 </template>
 
 <script>
@@ -56,6 +56,7 @@ export default {
     routerAgentURL: { default: process.env.VUE_APP_ROUTER_AGENT_URL },
     humanAgentURL: { default: process.env.VUE_APP_HUMAN_AGENT_URL },
     humanAgentWebhookURL: { default: process.env.VUE_APP_HUMAN_AGENT_WEBHOOK_URL },
+    lobbyServerURL: { default: process.env.VUE_APP_LOBBY_URL },
     botAgentURL: { default: process.env.VUE_APP_BOT_AGENT_URL },
     showBotSetup: { default: process.env.VUE_APP_SHOW_BOT_SETUP != 'false' },
     autoBotMsgRegister: { default: process.env.VUE_APP_AUTO_BOT_MSG_REGISTER != 'false' },

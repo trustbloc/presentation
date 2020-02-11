@@ -43,6 +43,7 @@
 <script>
     import { Slide } from 'eagle.js'
     import { AriesREST } from '../ariesrest.js'
+    import {LobbyClient} from "../lobbyclient";
 
     export default {
         name: 'DemoSetup',
@@ -50,6 +51,7 @@
             steps: { default: 4 },
             routerURL: String,
             agentURL: String,
+            lobbyURL: String,
             role: String,
         },
         mixins: [Slide],
@@ -62,6 +64,7 @@
                 routerConnnectionStatus: null,
                 ariesAgentClient: new AriesREST(this.agentURL),
                 ariesRouterClient: new AriesREST(this.routerURL),
+                lobbyClient: new LobbyClient(this.lobbyURL),
             };
         },
         metaInfo: {
