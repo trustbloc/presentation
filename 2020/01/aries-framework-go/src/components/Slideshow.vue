@@ -41,14 +41,14 @@
           R -->|WS| A(Agent Two);
     <DemoSetup :routerURL=routerAgentURL :agentURL=humanAgentURL role="" />
     <DemoSetup :routerURL=routerAgentURL :agentURL=botAgentURL role=" (bot)" v-if="this.showBotSetup" />
-    <DemoBasicMessage :botAgentURL=botAgentURL :humanAgentURL=humanAgentURL :humanAgentWebhookURL=humanAgentWebhookURL :autoBotMsgRegister=autoBotMsgRegister />
+    <DemoMultiUser :botAgentURL=botAgentURL :humanAgentURL=humanAgentURL :humanAgentWebhookURL=humanAgentWebhookURL :autoBotMsgRegister=autoBotMsgRegister />
 </template>
 
 <script>
 import { Slideshow } from 'eagle.js'
 import mermaid from './mermaid.vue'
 import DemoSetup from './DemoSetup.vue'
-import DemoBasicMessage from './DemoBasicMessage.vue'
+import DemoMultiUser from './DemoMultiUser.vue'
 
 export default {
   name: 'Slideshow',
@@ -64,7 +64,7 @@ export default {
   components: {
     mermaid,
     DemoSetup,
-    DemoBasicMessage
+    DemoMultiUser
   }
 }
 </script>
