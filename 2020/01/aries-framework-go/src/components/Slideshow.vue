@@ -33,6 +33,12 @@
     slide
       h1 Demonstration
       h4 Send a basic message between edge agents using a mediator to facilitate transport.
+    slide
+      h3 Edge Agent Routing Topology
+        mermaid.
+          graph TB;
+          A1(Agent One) -->|HTTP| R(Mediator);
+          R -->|WS| A(Agent Two);
     <DemoSetup :routerURL=routerAgentURL :agentURL=humanAgentURL role="" />
     <DemoSetup :routerURL=routerAgentURL :agentURL=botAgentURL role=" (bot)" v-if="this.showBotSetup" />
     <DemoBasicMessage :botAgentURL=botAgentURL :humanAgentURL=humanAgentURL :humanAgentWebhookURL=humanAgentWebhookURL :autoBotMsgRegister=autoBotMsgRegister />
@@ -40,6 +46,7 @@
 
 <script>
 import { Slideshow } from 'eagle.js'
+import mermaid from './mermaid.vue'
 import DemoSetup from './DemoSetup.vue'
 import DemoBasicMessage from './DemoBasicMessage.vue'
 
@@ -55,6 +62,7 @@ export default {
   },
   mixins: [ Slideshow ],
   components: {
+    mermaid,
     DemoSetup,
     DemoBasicMessage
   }
