@@ -59,9 +59,9 @@
 </template>
 
 <script>
-    import axios from 'axios';
+    import { AriesREST, AriesWebHook } from '../ariesrest.js'
     import { Slide } from 'eagle.js'
-   const uuidv4 = require('uuid/v4');
+    const uuidv4 = require('uuid/v4');
 
     export default {
         name: 'DemoBasicMessage',
@@ -83,6 +83,9 @@
                 botConnnectionStatus: null,
                 botMessageResponse: null,
                 botMessageContent: null,
+                ariesBotAgentClient: new AriesREST(this.botAgentURL),
+                ariesHumanAgentClient: new AriesREST(this.humanAgentURL),
+                ariesHumanWebHookClient: new AriesWebHook(this.humanAgentWebhookURL),
             };
         },
         metaInfo: {
@@ -90,9 +93,7 @@
         },
         methods: {
             getBotInvitation: function() {
-                axios
-                    .post(this.botAgentURL + '/connections/create-invitation', {})
-                    .then(res => {
+                this.ariesBotAgentClient.didexchange.CreateInvitation({}).then(res => {
                         this.invitation = res.data.invitation;
                     })
             },
@@ -101,13 +102,19 @@
                     this.connectionStatus = "Retrieve the invitation before proceeding"
                 } else {
                     this.connectionStatus = "connecting"
-                    let res = await axios.post(this.humanAgentURL + '/connections/receive-invitation', this.invitation)
-                    this.connectionID = res.data.connection_id
 
+                    try {
+                        let res = await this.ariesHumanAgentClient.didexchange.ReceiveInvitation(this.invitation)
+                        this.connectionID = res.data.connection_id
+                    } catch (err) {
+                        this.connectionStatus = err
+                        return
+                    }
+                    
                     const attempts = 40
                     for (let i =0; i < attempts; i++) {
                         await new Promise(r => setTimeout(r, 250));
-                        let res = await axios.get( this.humanAgentURL + "/connections/"+ this.connectionID)
+                        let res = await this.ariesHumanAgentClient.didexchange.QueryConnectionByID(this.connectionID)
 
                         if (res.data.result.State == 'completed') {
                             this.connectionStatus = res.data.result.State
@@ -121,10 +128,8 @@
                 }
             },
             botRegistration: async function() {
-                const registerAgentURL = this.botAgentURL + "/message/register-service"
-                
                 try {
-                    let res = await axios.post(registerAgentURL, {
+                    let res = await this.ariesBotAgentClient.messaging.RegisterMessageService({
                             "name" : "basic-message",
                             "type" : "https://didcomm.org/basicmessage/1.0/message"
                         })
@@ -135,14 +140,12 @@
                 }
             },
             humanRegistration: async function() {
-              await this.unregisterMessage(this.humanAgentURL)
-              await this.registerMessage(this.humanAgentURL)
+              await this.unregisterMessage(this.ariesHumanAgentClient)
+              await this.registerMessage(this.ariesHumanAgentClient)
             },
-            registerMessage: async function(agentURL) {
-                const registerAgentURL = agentURL + "/message/register-service"
-                
+            registerMessage: async function(agentClient) {
                 try {
-                    let res = await axios.post(registerAgentURL, {
+                    let res = await agentClient.messaging.RegisterMessageService({
                             "name" : "basic-message",
                             "type" : "https://didcomm.org/basicmessage/1.0/message"
                         })
@@ -153,11 +156,9 @@
                         this.registerStatus = err
                 }
             },
-            unregisterMessage: async function(agentURL) {
-                const unregisterAgentURL = agentURL + "/message/unregister-service"
-
+            unregisterMessage: async function(agentClient) {
                 try {
-                    let res = await axios.post(unregisterAgentURL, {
+                    let res = await agentClient.messaging.UnregisterMessageService({
                             "name" : "basic-message",
                         })
                         console.log(res)
@@ -167,7 +168,7 @@
             },
             botConnStatus: async function() {
                 try {
-                    let res = await axios.get(this.humanAgentURL + "/connections/"+ this.connectionID)
+                    let res = await this.ariesHumanAgentClient.didexchange.QueryConnectionByID(this.connectionID)
 
                     if (res.data.result.State == 'completed') {
                         this.botConnnectionStatus = "success"
@@ -182,10 +183,8 @@
                 this.botConnnectionStatus = ""
             },
             sendMessage: async function() {
-                const sendMessageURL = this.humanAgentURL + "/message/send"
-
                 try {
-                    await axios.post(sendMessageURL, {
+                    await this.ariesHumanAgentClient.messaging.SendNewMessage({
                             "connection_ID": this.connectionID,
                             "message_body": {
                                 "@id" : uuidv4(),
@@ -203,14 +202,10 @@
             },
             refreshTopicsData: async function() {
                 try {
-                    var topicsResponse = await axios.get(this.humanAgentWebhookURL + "/checktopics");
-                    if (topicsResponse.status === 200) {
-                        if (topicsResponse.data.message && topicsResponse.data.message['@type'] === "https://didcomm.org/basicmessage/1.0/message") {
-                            this.botMessageResponse = topicsResponse.data;
-                            this.botMessageContent = topicsResponse.data.message.content;
-                        }
-                    } else {
-                        this.botMessageResponse = topicsResponse.status;
+                    var topicsResponse = await this.ariesHumanWebHookClient.topics.Check();
+                    if (topicsResponse.data.message && topicsResponse.data.message['@type'] === "https://didcomm.org/basicmessage/1.0/message") {
+                        this.botMessageResponse = topicsResponse.data;
+                        this.botMessageContent = topicsResponse.data.message.content;
                     }
                 } catch(err) {
                     this.botMessageResponse = err;

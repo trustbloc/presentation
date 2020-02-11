@@ -41,8 +41,8 @@
 </template>
 
 <script>
-    import axios from 'axios';
     import { Slide } from 'eagle.js'
+    import { AriesREST } from '../ariesrest.js'
 
     export default {
         name: 'DemoSetup',
@@ -60,6 +60,8 @@
                 connectionID: null,
                 registerStatus: null,
                 routerConnnectionStatus: null,
+                ariesAgentClient: new AriesREST(this.agentURL),
+                ariesRouterClient: new AriesREST(this.routerURL),
             };
         },
         metaInfo: {
@@ -67,24 +69,32 @@
         },
         methods: {
             getRouterInvitation: function () {
-                axios
-                    .post(this.routerURL + '/connections/create-invitation', {})
-                    .then(res => {
-                        this.invitation = res.data.invitation;
-                    })
+                try {
+                    this.ariesRouterClient.didexchange.CreateInvitation({}).then(res => {
+                            this.invitation = res.data.invitation;
+                        })
+                } catch (err) {
+                    this.invitation = err
+                }
             },
             connectToRouter: async function () {
                 if (this.invitation === null) {
                     this.connectionStatus = "Retrieve the invitation before proceeding"
                 } else {
                     this.connectionStatus = "connecting"
-                    let res = await axios.post(this.agentURL + '/connections/receive-invitation', this.invitation)
-                    this.connectionID = res.data.connection_id
+
+                    try {
+                        let res = await this.ariesAgentClient.didexchange.ReceiveInvitation(this.invitation)
+                        this.connectionID = res.data.connection_id
+                    } catch (err) {
+                        this.connectionStatus = err
+                        return
+                    }
 
                     const attempts = 40
                     for (let i =0; i < attempts; i++) {
                         await new Promise(r => setTimeout(r, 250));
-                        let res = await axios.get( this.agentURL + "/connections/"+ this.connectionID)
+                        let res = await this.ariesAgentClient.didexchange.QueryConnectionByID(this.connectionID)
 
                         if (res.data.result.State == 'completed') {
                             this.connectionStatus = res.data.result.State
@@ -101,9 +111,7 @@
                 if (this.routerConnnectionStatus !== "success") {
                     this.registerStatus = "Make sure connection with router is complete."
                 } else {
-                    var registerRouterUrl = this.agentURL + "/route/register"
-                    axios
-                        .post(registerRouterUrl, {
+                    this.ariesAgentClient.router.Register({
                             "connectionID": this.connectionID
                         })
                         // eslint-disable-next-line no-unused-vars
@@ -115,17 +123,15 @@
                 }
             },
             unregisterRouter: async function () {
-                const unregisterRouterUrl = this.agentURL + "/route/unregister"
-
                 try {
-                    await axios.delete(unregisterRouterUrl,{})
+                    await this.ariesAgentClient.router.Unregister({})
                     this.registerStatus = "router unregistered"
                 } catch (err) {
                     this.registerStatus = err
                 }  
             },
             routerConnStatus: async function () {
-                let res = await axios.get( this.agentURL + "/connections/"+ this.connectionID)
+                let res = await this.ariesAgentClient.didexchange.QueryConnectionByID(this.connectionID)
 
                 if (res.data.result.State == 'completed') {
                     this.routerConnnectionStatus = "success"
