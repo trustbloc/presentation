@@ -13,14 +13,21 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/hyperledger/aries-framework-go/pkg/common/log"
 	"github.com/rs/cors"
 
-	"github.com/hyperledger/aries-framework-go/pkg/common/log"
 	"github.com/trustbloc/presentation/2020/01/aries-framework-go/cmd/lobby/api"
 	"github.com/trustbloc/presentation/2020/01/aries-framework-go/cmd/lobby/store/mem"
 )
 
-const addressPattern    = ":%s"
+const (
+	addressPattern    = ":%s"
+	demoPath   = "/demo"
+	getDemoPath   = demoPath + "/{uid}"
+	postInvitationsPath   = demoPath + "/{uid}/invitation"
+	getInvitationsPath   = demoPath + "/{uid}/invitations"
+)
+
 var logger = log.New("aries-framework/lobby-server")
 
 
@@ -35,9 +42,10 @@ func main() {
 
 	// REST Handlers
 	r := mux.NewRouter()
-	r.HandleFunc("/demo", api.CreateDemo)
-	r.HandleFunc("/demo/{uid}", api.GetDemo)
-	r.HandleFunc("/postInvitation", api.PostInvitation)
+	r.HandleFunc(demoPath, api.CreateDemo).Methods(http.MethodPost)
+	r.HandleFunc(getDemoPath, api.GetDemo).Methods(http.MethodGet)
+	r.HandleFunc(postInvitationsPath, api.PostInvitation).Methods(http.MethodPost)
+	r.HandleFunc(getInvitationsPath, api.GetInvitations).Methods(http.MethodGet)
 
 	handler := cors.Default().Handler(r)
 

@@ -9,6 +9,8 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -17,7 +19,6 @@ import (
 
 	"github.com/trustbloc/presentation/2020/01/aries-framework-go/cmd/lobby/store"
 )
-
 
 type API struct {
 	store store.Store
@@ -30,10 +31,6 @@ func NewAPI(store store.Store) *API{
 }
 
 func (api *API) CreateDemo(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "HTTP Method not allowed", http.StatusMethodNotAllowed)
-	}
-
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "failed to read payload", http.StatusInternalServerError)
@@ -64,23 +61,120 @@ func (api *API) CreateDemo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) GetDemo(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "HTTP Method not allowed", http.StatusMethodNotAllowed)
-	}
-
-
 	vars := mux.Vars(r)
 	id := vars["uid"]
 
-	data, err := api.store.Get(id)
+	demo, err  := api.getDemo(id)
+	if err != nil {
+		http.Error(w, "error = " +err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	demoBytes, err := json.Marshal(demo)
+
+	w.Write(demoBytes)
+}
+
+func (api *API)  PostInvitation (w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["uid"]
+
+	_, err  := api.getDemo(id)
+	if err != nil {
+		http.Error(w, "Invalid Demo ID : error = " +err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	payload, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "failed to read payload", http.StatusInternalServerError)
+		return
+	}
+
+	invitation := &Invitation{}
+	err = json.Unmarshal(payload, invitation)
+	if err != nil {
+		http.Error(w, "payload marshal error", http.StatusInternalServerError)
+		return
+	}
+
+	invitations, err  := api.getInvitations(id)
+	if err != nil && !errors.Is(err, store.ErrDataNotFound){
+		http.Error(w, "error = " +err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if errors.Is(err, store.ErrDataNotFound) {
+		invitations = &Invitations{
+			DIDExchangeInvitations: []Invitation{
+			},
+		}
+	}
+
+	newInvitations := &Invitations{
+		DIDExchangeInvitations:append(invitations.DIDExchangeInvitations, *invitation),
+	}
+
+	invitationByte, err := json.Marshal(newInvitations)
+
+	err  = api.store.Put(invitationDBKey(id), invitationByte)
 	if err != nil {
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return
 	}
-
-	w.Write(data)
 }
 
-func (api *API)  PostInvitation (w http.ResponseWriter, r *http.Request) {
-	// TODO Implement
+func (api *API)  GetInvitations (w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["uid"]
+
+	_, err  := api.getDemo(id)
+	if err != nil {
+		http.Error(w, "Invalid Demo ID : error = " +err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	invitations, err  := api.getInvitations(id)
+	if err != nil {
+		http.Error(w, "error = " +err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	invitationsByte, err := json.Marshal(invitations)
+
+	w.Write(invitationsByte)
+}
+
+func (api *API)  getInvitations (id string) (*Invitations, error) {
+	data, err := api.store.Get(invitationDBKey(id))
+	if err != nil {
+		return nil, err
+	}
+
+	invitations := &Invitations{}
+	err = json.Unmarshal(data, invitations)
+	if err != nil {
+		return nil, fmt.Errorf("db data unmarshal : %w", err)
+	}
+
+	return invitations, nil
+}
+
+func (api *API)  getDemo (id string) (*Demo, error) {
+	data, err := api.store.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	demo := &Demo{}
+	err = json.Unmarshal(data, demo)
+	if err != nil {
+		return nil, fmt.Errorf("db data unmarshal : %w", err)
+	}
+
+	return demo, err
+}
+
+func invitationDBKey(id string) string {
+	return "invitations-" + id
 }

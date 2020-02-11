@@ -8,7 +8,6 @@ package mem
 
 import (
 	"errors"
-	"fmt"
 	"github.com/trustbloc/presentation/2020/01/aries-framework-go/cmd/lobby/store"
 	"sync"
 )
@@ -29,8 +28,6 @@ func (s *memStore) Get(k string) ([]byte, error) {
 	if k == "" {
 		return nil, errors.New("key is mandatory")
 	}
-
-	fmt.Println("db =", s.db)
 
 	s.RLock()
 	data, ok := s.db[k]
