@@ -83,9 +83,9 @@
                 botConnnectionStatus: null,
                 botMessageResponse: null,
                 botMessageContent: null,
-                ariesBotAgentClient: new AriesREST(this.botAgentURL),
-                ariesHumanAgentClient: new AriesREST(this.humanAgentURL),
-                ariesHumanWebHookClient: new AriesWebHook(this.humanAgentWebhookURL),
+                ariesBotAgentClient: new AriesREST({ agentURL: this.botAgentURL }),
+                ariesHumanAgentClient: this.$aries,
+                ariesHumanWebHookClient: new AriesWebHook({ agentURL: this.humanAgentWebhookURL }),
             };
         },
         metaInfo: {

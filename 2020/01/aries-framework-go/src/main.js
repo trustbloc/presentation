@@ -18,6 +18,9 @@ import 'animate.css'
 import 'eagle.js/dist/themes/agrume/agrume.css'
 Options.hljs = hljs
 
+import { Aries } from "@hyperledger/aries-framework-go"
+Vue.prototype.$aries = new Aries({})
+
 Eagle.use(Modal)
 Eagle.use(CodeBlock)
 

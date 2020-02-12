@@ -60,8 +60,8 @@
                 connectionID: null,
                 registerStatus: null,
                 routerConnnectionStatus: null,
-                ariesAgentClient: new AriesREST(this.agentURL),
-                ariesRouterClient: new AriesREST(this.routerURL),
+                ariesAgentClient: this.$aries,
+                ariesRouterClient: new AriesREST({ agentURL: this.routerURL }),
             };
         },
         metaInfo: {
@@ -84,7 +84,7 @@
                     this.connectionStatus = "connecting"
 
                     try {
-                        let res = await this.ariesAgentClient.didexchange.ReceiveInvitation(this.invitation)
+                        let res = await this.ariesAgentClient.didexchange.receiveInvitation(this.invitation)
                         this.connectionID = res.data.connection_id
                     } catch (err) {
                         this.connectionStatus = err
@@ -94,7 +94,7 @@
                     const attempts = 40
                     for (let i =0; i < attempts; i++) {
                         await new Promise(r => setTimeout(r, 250));
-                        let res = await this.ariesAgentClient.didexchange.QueryConnectionByID(this.connectionID)
+                        let res = await this.ariesAgentClient.didexchange.queryConnectionByID(this.connectionID)
 
                         if (res.data.result.State == 'completed') {
                             this.connectionStatus = res.data.result.State
@@ -111,7 +111,7 @@
                 if (this.routerConnnectionStatus !== "success") {
                     this.registerStatus = "Make sure connection with router is complete."
                 } else {
-                    this.ariesAgentClient.router.Register({
+                    this.ariesAgentClient.router.register({
                             "connectionID": this.connectionID
                         })
                         // eslint-disable-next-line no-unused-vars
@@ -124,14 +124,14 @@
             },
             unregisterRouter: async function () {
                 try {
-                    await this.ariesAgentClient.router.Unregister({})
+                    await this.ariesAgentClient.router.unregister({})
                     this.registerStatus = "router unregistered"
                 } catch (err) {
                     this.registerStatus = err
                 }  
             },
             routerConnStatus: async function () {
-                let res = await this.ariesAgentClient.didexchange.QueryConnectionByID(this.connectionID)
+                let res = await this.ariesAgentClient.didexchange.queryConnectionByID(this.connectionID)
 
                 if (res.data.result.State == 'completed') {
                     this.routerConnnectionStatus = "success"

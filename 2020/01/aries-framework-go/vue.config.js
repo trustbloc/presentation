@@ -1,3 +1,3 @@
-module.exports = {
-    publicPath: '/2020/01/aries-framework-go'
-}
+// module.exports = {
+//     chainWebpack: config => config.resolve.symlinks(false)
+// }

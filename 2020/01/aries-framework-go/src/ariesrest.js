@@ -8,8 +8,17 @@ SPDX-License-Identifier: Apache-2.0
 
 import axios from 'axios';
 
-/* @class AriesREST provides Aries agent functions. */
-export const AriesREST = function(agentURL) {
+/**
+ * AriesREST provides Aries agent functions.
+ * @param opts
+ * @constructor
+ */
+export const AriesREST = function(opts) {
+    if (!opts || !opts.agentURL) {
+        throw new Error("aries: missing agentURL")
+    }
+
+    const agentURL = opts.agentURL
 
     this.didexchange = {
         CreateInvitation: async function(data) {
